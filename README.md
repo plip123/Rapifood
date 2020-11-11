@@ -3,11 +3,14 @@
     http://127.0.0.1:8000/api/signup
     
     {
-        'name',
-        'lastname',
-        'email',
-        'password',
-        'password_confirmation'
+        'name':'required|string',
+        'lastname':'required|string',
+        'email':'required|string',
+        'roleID':'required|integer',
+        'address':'required|string',
+        'city':'required|string',
+        'password':'required|string',
+        'password_confirmation':'required|string'
     }
 </p>
 
