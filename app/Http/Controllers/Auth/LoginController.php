@@ -33,7 +33,7 @@ class LoginController extends Controller
 
         if ($user) {
             if (Hash::check($request->get('password'),$user->password)){
-                if ($user->activate){
+                //if ($user->activate){
                     $token = Str::random(255);
                     $user->api_token = \hash('sha256',$token);
                     $user->save();
@@ -42,14 +42,14 @@ class LoginController extends Controller
                         'token'=> $user->api_token,
                         'status' => true
                     ];
-                } else {
+                /*} else {
                     $this->responsedata = [
                         'error'=> ['Inactive user'],
                         'status' => false,
                         'message' => 'Inactive user'
                     ];
                     $this->status = 401;
-                }
+                }*/
             } else {
                 $this->responsedata = [
                     'error'=> ['Invalid credentials'],

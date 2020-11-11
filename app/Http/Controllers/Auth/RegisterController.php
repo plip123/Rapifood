@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 use App\User;
 
@@ -34,6 +35,7 @@ class RegisterController extends Controller
         ]);
 
         $user = null;
+        $token = Str::random(255);
 
         $user = new User([
             'user' => $request->get('user'),
@@ -43,17 +45,22 @@ class RegisterController extends Controller
             'roleID' => $request->get('roleID'),
             'address' => $request->get('address'),
             'city' => $request->get('city'),
-            'password' => Hash::make($request->get('password')),
+            'password' => Hash::make($request->get('password'))
         ]);
 
         
 
         if($user) {
+            $token = Str::random(255);
+            $user->api_token = \hash('sha256',$token);
+            
             $user->save();
-
+            $data = $user;
+            //$data["token"] = $user;
             $this->responsedata = [
                 'status' => true,
-                'message' => 'Registered user'
+                'message' => 'Registered user',
+                'data' => $data,
             ];
         } else {
             $this->responsedata = [
