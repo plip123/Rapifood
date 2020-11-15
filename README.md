@@ -9,8 +9,7 @@
         'roleID':'required|integer',
         'address':'required|string',
         'city':'required|string',
-        'password':'required|string',
-        'password_confirmation':'required|string'
+        'password':'required|string'
     }
 </p>
 

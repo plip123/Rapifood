@@ -24,7 +24,6 @@ class RegisterController extends Controller
     public function store (Request $request) {
 
         $request->validate([
-            'user' => 'required|string',
             'name' => 'required|string',
             'lastname' => 'required|string',
             'email'    => 'required|string|email|unique:users',
@@ -38,7 +37,6 @@ class RegisterController extends Controller
         $token = Str::random(255);
 
         $user = new User([
-            'user' => $request->get('user'),
             'name' => $request->get('name'),
             'lastname' => $request->get('lastname'),
             'email'    => strtolower($request->get('email')),
