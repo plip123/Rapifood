@@ -25,6 +25,73 @@
     }
 </p>
 
+## Payment CRUD
+<p>
+    http://127.0.0.1:8000/api/payment
+    method:POST
+    
+    {
+        'name' => 'required|string',
+        'description' => 'string',
+        'apiKey' => 'required|string'
+    }
+
+    http://127.0.0.1:8000/api/payment/{id}
+    method:GET
+    
+    http://127.0.0.1:8000/api/payment/1
+    method:PUT
+    {
+        'name' => 'required|string',
+        'description' => 'string',
+        'apiKey' => 'required|string'
+    }
+    
+    http://127.0.0.1:8000/api/payment/{id}
+    method:DELETE  
+</p>
+
+## Pay
+<p>
+    http://127.0.0.1:8000/api/pay
+    
+    {
+        'paymentID': 'required|integer',
+        'cardNumber': 'required|string',
+        'cardDate': 'required|string',
+        'securityCode': 'required|string',
+        'cardName': 'required|string',
+        'amount': 'required|integer',
+        'description': 'required|string',
+        'ref': 'string'
+    }
+</p>
+
+## Payment Order
+<p>
+    http://127.0.0.1:8000/api/order
+    method:POST
+    
+    {
+        'name' => 'required|string',
+        'description' => 'string',
+        'apiKey' => 'required|string'
+    }
+
+    http://127.0.0.1:8000/api/order/{id}
+    method:GET
+    
+    http://127.0.0.1:8000/api/order/1
+    method:PUT
+    {
+        'name' => 'required|string',
+        'description' => 'string',
+        'apiKey' => 'required|string'
+    }
+    
+    http://127.0.0.1:8000/api/order/{id}
+    method:DELETE  
+</p>
 
 
 

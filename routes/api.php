@@ -23,5 +23,7 @@ Route::post('login','Auth\LoginController@login');
 
 
 Route::group(['middleware' => 'auth:api'], function () {
+    Route::resource('payment','PaymentController');
+    Route::post('pay','PaymentGatewayController@index');
     
 });
