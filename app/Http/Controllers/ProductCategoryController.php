@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Ingredient;
+use App\ProductCategory;
 use Illuminate\Http\Request;
 
-class IngredientController extends Controller
+class ProductCategoryController extends Controller
 {
     private $responsedata;
     private $status;
@@ -26,34 +26,36 @@ class IngredientController extends Controller
     public function store(Request $request)
     {
         $this->validate($request, [
-            'name' => 'required|string'
+            'name' => 'required|string',
+            'description' => 'string'
         ]);
 
         $data = $request->all();
-        $ingredient_table = Ingredient::latest()->first();
+        $category_table = ProductCategory::latest()->first();
 
-        if ($ingredient_table) {
-            $ingredient_id = $ingredient_table->id + 1;
+        if ($category_table) {
+            $category_id = $category_table->id + 1;
         } else {
-            $ingredient_id = 1;
+            $category_id = 1;
         }
         
-        $Ingredient = new Ingredient;
-        $Ingredient->id = $ingredient_id;
-        $Ingredient->name = $data['name'];
+        $ProductCategory = new ProductCategory;
+        $ProductCategory->id = $category_id;
+        $ProductCategory->name = $data['name'];
+        $ProductCategory->description = !empty($data['description']) ? $data['description'] : "";
 
-        if ($Ingredient->save()) {
-            $Ingredient->id = $ingredient_id;
+        if ($ProductCategory->save()) {
+            $ProductCategory->id = $category_id;
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Ingredient
+                'data' => $ProductCategory
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Failure to save ingredient'
+                'message' => 'Failure to save ProductCategory'
             ];
 
             $this->status = 405;
@@ -70,19 +72,19 @@ class IngredientController extends Controller
      */
     public function show($id)
     {
-        $Ingredient = Ingredient::where('id',$id)->get()[0];
+        $ProductCategory = ProductCategory::where('id',$id)->get()[0];
 
-        if ($Ingredient) {
+        if ($ProductCategory) {
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Ingredient
+                'data' => $ProductCategory
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Ingredient not found'
+                'message' => 'ProductCategory not found'
             ];
 
             $this->status = 405;
@@ -91,21 +93,22 @@ class IngredientController extends Controller
         return response()->json($this->responsedata,$this->status);
     }
 
+
     public function index()
     {
-        $Ingredient = Ingredient::all();
+        $ProductCategory = ProductCategory::all();
 
-        if ($Ingredient) {
+        if ($ProductCategory) {
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Ingredient
+                'data' => $ProductCategory
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Ingredient not found'
+                'message' => 'ProductCategory not found'
             ];
 
             $this->status = 405;
@@ -125,24 +128,26 @@ class IngredientController extends Controller
     {
         $this->validate($request, [
             'name' => 'required|string',
+            'description' => 'string'
         ]);
 
         $data = $request->all();
         
-        $Ingredient = Ingredient::find($id);
-        $Ingredient->name = $data['name'];
+        $ProductCategory = ProductCategory::find($id);
+        $ProductCategory->name = $data['name'];
+        $ProductCategory->description = !empty($data['description']) ? $data['description'] : $ProductCategory->description;
         
-        if ($Ingredient->save()) {
+        if ($ProductCategory->save()) {
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Ingredient
+                'data' => $ProductCategory
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Failure to save ingredient'
+                'message' => 'Failure to save ProductCategory'
             ];
 
             $this->status = 405;
@@ -159,7 +164,7 @@ class IngredientController extends Controller
      */
     public function destroy($id)
     {
-        if (Ingredient::where('id',$id)->forceDelete()) {
+        if (ProductCategory::where('id',$id)->forceDelete()) {
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok'
@@ -168,7 +173,7 @@ class IngredientController extends Controller
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Ingredient not found'
+                'message' => 'ProductCategory not found'
             ];
 
             $this->status = 405;

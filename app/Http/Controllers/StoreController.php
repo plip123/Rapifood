@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Store;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class StoreController extends Controller
 {
@@ -43,19 +44,17 @@ class StoreController extends Controller
             $store_id = 1;
         }
 
-        $path = Storage::putFile('public/stores', $request->file('logo'));
-
         $Store = new Store;
         $Store->id = $store_id;
         $Store->name = $data['name'];
         $Store->userID = $data['userID'];
-        $Store->logo = $path;
+        $Store->logo = !empty($request->file('logo')) ? Storage::putFile('public/stores', $request->file('logo')) : "";
         $Store->address = $data['address'];
         $Store->city = $data['city'];
 
         if ($Store->save()) {
             $Store->id = $store_id;
-            $Store->logo = Storage::url($path);
+            $Store->logo = Storage::url($Store->logo);
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
@@ -145,35 +144,45 @@ class StoreController extends Controller
     {
         $this->validate($request, [
             'name' => 'required|string',
-            'userID' => 'required|integer',
             'logo' => 'file',
             'address' => 'required|string',
             'city' => 'required|string'
         ]);
 
+        $User = Auth::user();
         $data = $request->all();
         
-        $Store = Store::find($id);
-        $Store->name = $data['name'];
-        $Store->userID = $data['userID'];
-        Storage::delete($Store->image);
-        $path = Storage::putFile('public/stores', $request->file('logo'));
-        $Store->logo = $path;
-        $Store->address = $data['address'];
-        $Store->city = $data['city'];
+        $Store = Store::where('id',$id)->get();
 
-        if ($Store->save()) {
-            $Store->logo = Storage::url($path);
-            $this->responsedata = [
-                'status' => true,
-                'message' => 'Ok',
-                'data' => $Store
-            ];
+        if (count($Store) > 0 && $Store[0]->userID == $User->id) {
+            $Store = $Store[0];
+            $Store->name = $data['name'];
+            Storage::delete($Store->image);
+            $Store->logo = !empty($request->file('logo')) ? Storage::putFile('public/stores', $request->file('logo')) : $Store->logo;
+            $Store->address = $data['address'];
+            $Store->city = $data['city'];
+
+            if ($Store->save()) {
+                $Store->logo = Storage::url($Store->logo);
+                $this->responsedata = [
+                    'status' => true,
+                    'message' => 'Ok',
+                    'data' => $Store
+                ];
+            } else {
+                $this->responsedata = [
+                    'error'=> ['Failed'],
+                    'status' => false,
+                    'message' => 'Failure to save store'
+                ];
+
+                $this->status = 405;
+            }
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Failure to save store'
+                'message' => 'Store not found'
             ];
 
             $this->status = 405;

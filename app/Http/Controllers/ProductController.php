@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
+use App\Store;
 use App\Product;
+use App\ProductIngredient;
 
 class ProductController extends Controller
 {
@@ -16,6 +19,63 @@ class ProductController extends Controller
     {
         $this->responsedata = array();
         $this->status = 200;
+    }
+
+
+    public function productFilter(Request $request)
+    {
+        $this->validate($request, [
+            'restaurant_id' => 'integer',
+            'type_id' => 'integer',
+            'min_price' => 'regex:/^[0-9]+(\.[0-9][0-9]?)?$/',
+            'max_price' => 'regex:/^[0-9]+(\.[0-9][0-9]?)?$/',
+            'like' => 'string'
+        ]);
+
+        $data = $request->all();
+
+        $Product = Product::where([
+            ['name', 'like', $data['like'] ? '%'. $data['like'] .'%' : ""],
+            $data['type_id'] ? ['categoryID', '=', $data['type_id']] : ['price', '>=', $data['min_price']],
+            $data['restaurant_id'] ? ['storeID', '=', $data['restaurant_id']] : ['price', '>=', $data['min_price']],
+            ['price', '>=', $data['min_price']],
+            $data['max_price'] > 0 ? ['price', '<=', $data['max_price']] : ['price', '>=', $data['max_price']]
+        ])->get();
+
+        return $Product;
+
+
+        return response()->json($this->responsedata,$this->status);
+    }
+
+
+    public function productIngredient ($productID, $ingredientID) {
+        $product_ingredient_table = Product::latest()->first();
+
+        if ($product_ingredient_table) {
+            $product_ingredient_id = $product_ingredient_table->id + 1;
+        } else {
+            $product_ingredient_id = 1;
+        }
+
+        $arrayIngredients = array();
+
+        foreach ($ingredientID as $ingredient) {
+            $ProductIngredient = new ProductIngredient;
+            $ProductIngredient->id = $product_ingredient_id;
+            $ProductIngredient->productID = $productID;
+            $ProductIngredient->ingredientID = $ingredient;
+
+            if ($ProductIngredient->save()) {
+                array_push($arrayIngredients, $ingredient);
+            }
+        }
+        
+        if (count($arrayIngredients) > 0) {
+            return $arrayIngredients;
+        }
+
+        return false;
     }
 
     /**
@@ -35,45 +95,66 @@ class ProductController extends Controller
             'offert' => 'required|boolean',
             'image' => 'file',
             'priority' => 'required|integer',
-            'storeID' => 'required|integer'
+            'categoryID' => 'required|integer',
+            'ingredientID' => 'array',
+            'ingredientID.*' => 'integer'
         ]);
 
-        $data = $request->all();
-        $product_table = Product::latest()->first();
+        $User = Auth::user();
 
-        if ($product_table) {
-            $product_id = $product_table->id + 1;
-        } else {
-            $product_id = 1;
-        }
+        $Store = Store::where('userID', $User->id)->get();
 
-        $path = Storage::putFile('public/products', $request->file('image'));
-        
-        $Product = new Product;
-        $Product->id = $product_id;
-        $Product->name = $data['name'];
-        $Product->price = $data['price'];
-        $Product->offert_price = $data['offert_price'];
-        $Product->description = $data['description'];
-        $Product->state = $data['state'];
-        $Product->offert = $data['offert'];
-        $Product->image = $path;
-        $Product->priority = $data['priority'];
-        $Product->storeID = $data['storeID'];
+        if (count($Store) > 0) {
+            $data = $request->all();
+            $product_table = Product::latest()->first();
 
-        if ($Product->save()) {
+            if ($product_table) {
+                $product_id = $product_table->id + 1;
+            } else {
+                $product_id = 1;
+            }
+            
+            $Product = new Product;
             $Product->id = $product_id;
-            $Product->image = Storage::url($path);
-            $this->responsedata = [
-                'status' => true,
-                'message' => 'Ok',
-                'data' => $Product,
-            ];
+            $Product->name = $data['name'];
+            $Product->price = $data['price'];
+            $Product->offert_price = $data['offert_price'];
+            $Product->description = $data['description'];
+            $Product->state = $data['state'];
+            $Product->offert = $data['offert'];
+            $Product->image = !empty($request->file('image')) ? Storage::putFile('public/products', $request->file('image')) : "";
+            $Product->priority = $data['priority'];
+            $Product->categoryID = $data['categoryID'];
+            $Product->storeID = $Store[0]->id;
+
+            if ($Product->save()) {
+                $Product->id = $product_id;
+                if (!empty($data['ingredientID'])) {
+                    $product_ingredient = $this->productIngredient($product_id, $data['ingredientID']);
+                    if ($product_ingredient) {
+                        $Product->ingredientID = $product_ingredient;
+                    }
+                }
+                $Product->image = !empty($Product->image) ? Storage::url($Product->image) : "";
+                $this->responsedata = [
+                    'status' => true,
+                    'message' => 'Ok',
+                    'data' => $Product,
+                ];
+            } else {
+                $this->responsedata = [
+                    'error'=> ['Failed'],
+                    'status' => false,
+                    'message' => 'Failure to save product'
+                ];
+
+                $this->status = 405;
+            }
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Failure to save product'
+                'message' => 'This user does not have a store'
             ];
 
             $this->status = 405;
@@ -160,6 +241,9 @@ class ProductController extends Controller
             'offert' => 'required|boolean',
             'image' => 'file',
             'priority' => 'required|integer',
+            'categoryID' => 'required|integer',
+            'ingredientID' => 'array',
+            'ingredientID.*' => 'integer'
         ]);
 
         $data = $request->all();
@@ -172,12 +256,18 @@ class ProductController extends Controller
         $Product->state = $data['state'];
         $Product->offert = $data['offert'];
         Storage::delete($Product->image);
-        $path = Storage::putFile('public/products', $request->file('image'));
-        $Product->image = $path;
+        $Product->image = !empty($request->file('image')) ? Storage::putFile('public/products', $request->file('image')) : $Product->image;
+        $Product->categoryID = $data['categoryID'];
         $Product->priority = $data['priority'];
 
         if ($Product->save()) {
-            $Product->image = Storage::url($path);
+            if (!empty($data['ingredientID'])) {
+                $product_ingredient = $this->productIngredient($product_id, $data['ingredientID']);
+                if ($product_ingredient) {
+                    $Product->ingredientID = $product_ingredient;
+                }
+            }
+            $Product->image = !empty($Product->image) ? Storage::url($Product->image) : "";
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',

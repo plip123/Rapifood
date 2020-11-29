@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 use App\User;
+use App\Role;
 
 class UserController extends Controller
 {
@@ -24,11 +26,12 @@ class UserController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    /*public function store(Request $request)
     {
         $this->validate($request, [
             'name' => 'required|string',
             'lastname' => 'required|string',
+            'email' => 'required|string|email|unique:users',
             'roleID' => 'required|integer',
             'address' => 'required|string',
             'avatar' => 'file',
@@ -50,6 +53,7 @@ class UserController extends Controller
         $User->id = $user_id;
         $User->name = $data['name'];
         $User->lastname = $data['lastname'];
+        $User->email = $data['email'];
         $User->roleID = $data['roleID'];
         $User->address = $data['address'];
         $User->avatar = $path;
@@ -81,6 +85,55 @@ class UserController extends Controller
         }
 
         return response()->json($this->responsedata,$this->status);
+    }*/
+
+    public function changeRole (Request $request) {
+
+        $this->validate($request, [
+            'roleID' => 'required|integer',
+            'userID' => 'required|integer'
+        ]);
+
+        $data = $request->all();
+        $User = User::where('id',$data['userID'])->get();
+        if (count($User) > 0 && count(Role::where('id',$data['roleID'])->get()) > 0) {
+            $User = $User[0];
+            $User->roleID = $data['roleID'];
+
+            if ($User->save()) {
+                $User->avatar = Storage::url($User->avatar);
+                $this->responsedata = array(
+                    'status' => true,
+                    'message' => 'Ok',
+                    'data' => array(
+                        'name' => $User->name,
+                        'lastname' => $User->lastname,
+                        'roleID' => $User->roleID,
+                        'adress' => $User->address,
+                        'avatar' => $User->avatar,
+                        'city' => $User->city,
+                    ),
+                );
+            } else {
+                $this->responsedata = [
+                    'error'=> ['Failed'],
+                    'status' => false,
+                    'message' => 'Failure to change Role'
+                ];
+    
+                $this->status = 405;
+            }
+        } else {
+            $this->responsedata = [
+                'error'=> ['Failed'],
+                'status' => false,
+                'message' => 'Role or user invalid'
+            ];
+
+            $this->status = 405;
+        }
+
+        return response()->json($this->responsedata,$this->status);
     }
 
     /**
@@ -91,14 +144,15 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        $User = User::where('id',$id)->get()[0]   ;
+        $User = User::where('id',$id)->get()[0];
 
         if ($User) {
-            $User->image = Storage::url($User->image);
+            $User->avatar = Storage::url($User->avatar);
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
                 'data' => array(
+                    'id' => $User->id,
                     'name' => $User->name,
                     'lastname' => $User->lastname,
                     'roleID' => $User->roleID,
@@ -121,21 +175,55 @@ class UserController extends Controller
     }
 
 
-    public function index()
+    public function currentUser()
     {
-        $User = User::all();
+        $User = Auth::user();
 
         if ($User) {
-            $responseUser = array();
-            foreach ($User as $user) {
-                $User->image = Storage::url($user->image);
-                array_push($responseUser, array(
+            $User->avatar = !empty($User->avatar) ? Storage::url($User->avatar) : "";
+            $this->responsedata = [
+                'status' => true,
+                'message' => 'Ok',
+                'data' => array(
+                    'id' => $User->id,
                     'name' => $User->name,
                     'lastname' => $User->lastname,
                     'roleID' => $User->roleID,
                     'adress' => $User->address,
                     'avatar' => $User->avatar,
                     'city' => $User->city,
+                )
+            ];
+        } else {
+            $this->responsedata = [
+                'error'=> ['Failed'],
+                'status' => false,
+                'message' => 'User not found'
+            ];
+
+            $this->status = 405;
+        }
+
+        return response()->json($this->responsedata,$this->status);
+    }
+
+
+    public function allUsers()
+    {
+        $User = User::all();
+
+        if ($User) {
+            $responseUser = array();
+            foreach ($User as $user) {
+                $User->image = !empty($user->image) ? Storage::url($user->image) : "";
+                array_push($responseUser, array(
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'lastname' => $user->lastname,
+                    'roleID' => $user->roleID,
+                    'adress' => $user->address,
+                    'avatar' => $user->avatar,
+                    'city' => $user->city,
                 ));
             }
 
@@ -164,12 +252,11 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
         $this->validate($request, [
             'name' => 'required|string',
             'lastname' => 'required|string',
-            'roleID' => 'required|integer',
             'address' => 'required|string',
             'avatar' => 'file',
             'city' => 'required|string',
@@ -177,22 +264,21 @@ class UserController extends Controller
 
         $data = $request->all();
         
-        $User = User::find($id);
+        $User = Auth::user();
         $User->name = $data['name'];
         $User->lastname = $data['lastname'];
-        $User->roleID = $data['roleID'];
         $User->address = $data['address'];
-        Storage::delete($User->image);
-        $path = Storage::putFile('public/users', $request->file('image'));
-        $User->avatar = $path;
+        Storage::delete($User->avatar);
+        $User->avatar = !empty($request->file('avatar')) ? Storage::putFile('public/users', $request->file('avatar')) : $User->avatar;
         $User->city = $data['city'];
 
         if ($User->save()) {
-            $User->image = Storage::url($path);
+            $User->avatar = Storage::url($path);
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
                 'data' => array(
+                    'id' => $User->id,
                     'name' => $User->name,
                     'lastname' => $User->lastname,
                     'roleID' => $User->roleID,

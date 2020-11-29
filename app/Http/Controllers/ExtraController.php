@@ -40,18 +40,16 @@ class ExtraController extends Controller
         } else {
             $extra_id = 1;
         }
-
-        $path = Storage::putFile('public/extras', $request->file('image'));
         
         $Extra = new Extra;
         $Extra->id = $extra_id;
         $Extra->name = $data['name'];
-        $Extra->image = $path;
+        $Extra->image = !empty($request->file('image')) ? Storage::putFile('public/extras', $request->file('image')) : "";
         $Extra->price = $data['price'];
 
         if ($Extra->save()) {
             $Extra->id = $extra_id;
-            $Extra->image = Storage::url($path);
+            $Extra->image = Storage::url($Extra->image);
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
@@ -149,12 +147,11 @@ class ExtraController extends Controller
         $Extra = Extra::find($id);
         $Extra->name = $data['name'];
         Storage::delete($Extra->image);
-        $path = Storage::putFile('public/extras', $request->file('image'));
-        $Extra->image = $path;
+        $Extra->image = !empty($request->file('image')) ? Storage::putFile('public/extras', $request->file('image')) : $Extra->image;
         $Extra->price = $data['price'];
 
         if ($Extra->save()) {
-            $Extra->image = Storage::url($path);
+            $Extra->image = Storage::url($Extra->image);
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
