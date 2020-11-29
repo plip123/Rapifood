@@ -24,15 +24,53 @@
     }
 </p>
 
+## Product CRUD
+<p>
+    http://127.0.0.1:8000/api/product
+    method:POST
+    
+    {
+        'name': 'required|string',
+        'price': 'required|double',
+        'offert_price': 'double',
+        'description': 'string',
+        'state': 'required|string',
+        'offert': 'required|boolean',
+        'image': 'required|string',
+        'priority': 'required|integer',
+        'storeID': 'required|integer'
+    }
+
+    http://127.0.0.1:8000/api/product/{id}
+    method:GET
+    
+    http://127.0.0.1:8000/api/product/1
+    method:PUT
+    {
+        'name': 'required|string',
+        'price': 'required|double',
+        'offert_price': 'double',
+        'description': 'string',
+        'state': 'required|string',
+        'offert': 'required|boolean',
+        'image': 'required|string',
+        'priority': 'required|integer',
+        'storeID': 'required|integer'
+    }
+    
+    http://127.0.0.1:8000/api/product/{id}
+    method:DELETE  
+</p>
+
 ## Payment CRUD
 <p>
     http://127.0.0.1:8000/api/payment
     method:POST
     
     {
-        'name' => 'required|string',
-        'description' => 'string',
-        'apiKey' => 'required|string'
+        'name': 'required|string',
+        'description': 'string',
+        'apiKey': 'required|string'
     }
 
     http://127.0.0.1:8000/api/payment/{id}
@@ -41,9 +79,9 @@
     http://127.0.0.1:8000/api/payment/1
     method:PUT
     {
-        'name' => 'required|string',
-        'description' => 'string',
-        'apiKey' => 'required|string'
+        'name': 'required|string',
+        'description': 'string',
+        'apiKey': 'required|string'
     }
     
     http://127.0.0.1:8000/api/payment/{id}
@@ -72,9 +110,9 @@
     method:POST
     
     {
-        'name' => 'required|string',
-        'description' => 'string',
-        'apiKey' => 'required|string'
+        'name': 'required|string',
+        'description': 'string',
+        'apiKey': 'required|string'
     }
 
     http://127.0.0.1:8000/api/order/{id}
@@ -83,9 +121,9 @@
     http://127.0.0.1:8000/api/order/1
     method:PUT
     {
-        'name' => 'required|string',
-        'description' => 'string',
-        'apiKey' => 'required|string'
+        'name': 'required|string',
+        'description': 'string',
+        'apiKey': 'required|string'
     }
     
     http://127.0.0.1:8000/api/order/{id}

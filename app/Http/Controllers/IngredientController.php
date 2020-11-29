@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Ingredient;
 use Illuminate\Http\Request;
-use App\Payment;
 
-class PaymentController extends Controller
+class IngredientController extends Controller
 {
-
     private $responsedata;
     private $status;
 
@@ -27,39 +26,33 @@ class PaymentController extends Controller
     public function store(Request $request)
     {
         $this->validate($request, [
-            'name' => 'required|string',
-            'description' => 'string',
-            'apiKey' => 'required|string',
-            'url' => 'required|string'
+            'name' => 'required|string'
         ]);
 
         $data = $request->all();
-        $payment_table = Payment::latest()->first();
+        $ingredient_table = Ingredient::latest()->first();
 
-        if ($payment_table) {
-            $payment_id = $payment_table->id + 1;
+        if ($ingredient_table) {
+            $ingredient_id = $ingredient_table->id + 1;
         } else {
-            $payment_id = 1;
+            $ingredient_id = 1;
         }
         
-        $Payment = new Payment;
-        $Payment->id = $payment_id;
-        $Payment->name = $data['name'];
-        $Payment->description = $data['description'];
-        $Payment->apiKey = $data['apiKey'];
-        $Payment->apiKey = $data['url'];
+        $Ingredient = new Ingredient;
+        $Ingredient->id = $ingredient_id;
+        $Ingredient->name = $data['name'];
 
-        if ($Payment->save()) {
+        if ($Ingredient->save()) {
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $Ingredient
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Failure to save payment'
+                'message' => 'Failure to save ingredient'
             ];
 
             $this->status = 405;
@@ -76,19 +69,19 @@ class PaymentController extends Controller
      */
     public function show($id)
     {
-        $Payment = Payment::where('id',$id)->get()[0];
+        $Ingredient = Ingredient::where('id',$id)->get()[0];
 
-        if ($Payment) {
+        if ($Ingredient) {
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $Ingredient
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Payment not found'
+                'message' => 'Ingredient not found'
             ];
 
             $this->status = 405;
@@ -97,22 +90,21 @@ class PaymentController extends Controller
         return response()->json($this->responsedata,$this->status);
     }
 
-
     public function index()
     {
-        $Payment = Payment::all();
+        $Ingredient = Ingredient::all();
 
-        if ($Payment) {
+        if ($Ingredient) {
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $Ingredient
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Payment not found'
+                'message' => 'Ingredient not found'
             ];
 
             $this->status = 405;
@@ -132,30 +124,24 @@ class PaymentController extends Controller
     {
         $this->validate($request, [
             'name' => 'required|string',
-            'description' => 'string',
-            'apiKey' => 'required|string',
-            'url' => 'required|string'
         ]);
 
         $data = $request->all();
         
-        $Payment = Payment::find($id);
-        $Payment->name = $data['name'];
-        $Payment->description = $data['description'];
-        $Payment->apiKey = $data['apiKey'];
-        $Payment->url = $data['url'];
-
-        if ($Payment->save()) {
+        $Ingredient = Ingredient::find($id);
+        $Ingredient->name = $data['name'];
+        
+        if ($Ingredient->save()) {
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $Ingredient
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Failure to save payment'
+                'message' => 'Failure to save ingredient'
             ];
 
             $this->status = 405;
@@ -172,7 +158,7 @@ class PaymentController extends Controller
      */
     public function destroy($id)
     {
-        if (Payment::where('id',$id)->forceDelete()) {
+        if (Ingredient::where('id',$id)->forceDelete()) {
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok'
@@ -181,7 +167,7 @@ class PaymentController extends Controller
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Payment not found'
+                'message' => 'Ingredient not found'
             ];
 
             $this->status = 405;

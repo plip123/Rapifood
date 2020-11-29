@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Payment;
+use Illuminate\Support\Facades\Storage;
+use App\Extra;
 
-class PaymentController extends Controller
+class ExtraController extends Controller
 {
-
     private $responsedata;
     private $status;
 
@@ -28,38 +28,40 @@ class PaymentController extends Controller
     {
         $this->validate($request, [
             'name' => 'required|string',
-            'description' => 'string',
-            'apiKey' => 'required|string',
-            'url' => 'required|string'
+            'image' => 'file',
+            'price' => 'required|regex:/^[0-9]+(\.[0-9][0-9]?)?$/'
         ]);
 
         $data = $request->all();
-        $payment_table = Payment::latest()->first();
+        $extra_table = Extra::latest()->first();
 
-        if ($payment_table) {
-            $payment_id = $payment_table->id + 1;
+        if ($extra_table) {
+            $extra_id = $extra_table->id + 1;
         } else {
-            $payment_id = 1;
+            $extra_id = 1;
         }
-        
-        $Payment = new Payment;
-        $Payment->id = $payment_id;
-        $Payment->name = $data['name'];
-        $Payment->description = $data['description'];
-        $Payment->apiKey = $data['apiKey'];
-        $Payment->apiKey = $data['url'];
 
-        if ($Payment->save()) {
+        $path = Storage::putFile('public/extras', $request->file('image'));
+        
+        $Extra = new Extra;
+        $Extra->id = $extra_id;
+        $Extra->name = $data['name'];
+        $Extra->image = $path;
+        $Extra->price = $data['price'];
+
+        if ($Extra->save()) {
+            $Extra->id = $extra_id;
+            $Extra->image = Storage::url($path);
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $Extra
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Failure to save payment'
+                'message' => 'Failure to save Extra'
             ];
 
             $this->status = 405;
@@ -76,19 +78,20 @@ class PaymentController extends Controller
      */
     public function show($id)
     {
-        $Payment = Payment::where('id',$id)->get()[0];
+        $Extra = Extra::where('id',$id)->get()[0];
 
-        if ($Payment) {
+        if ($Extra) {
+            $Extra->image = Storage::url($Extra->image);
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $Extra
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Payment not found'
+                'message' => 'Extra not found'
             ];
 
             $this->status = 405;
@@ -97,22 +100,27 @@ class PaymentController extends Controller
         return response()->json($this->responsedata,$this->status);
     }
 
-
     public function index()
     {
-        $Payment = Payment::all();
+        $Extra = Extra::all();
 
-        if ($Payment) {
+        if ($Extra) {
+            $responseExtra = array();
+            foreach ($Extra as $extra) {
+                $Extra->image = Storage::url($extra->image);
+                array_push($responseExtra, $extra);
+            }
+
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $responseExtra
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Payment not found'
+                'message' => 'Extra not found'
             ];
 
             $this->status = 405;
@@ -132,30 +140,31 @@ class PaymentController extends Controller
     {
         $this->validate($request, [
             'name' => 'required|string',
-            'description' => 'string',
-            'apiKey' => 'required|string',
-            'url' => 'required|string'
+            'image' => 'file',
+            'price' => 'required|regex:/^[0-9]+(\.[0-9][0-9]?)?$/'
         ]);
 
         $data = $request->all();
-        
-        $Payment = Payment::find($id);
-        $Payment->name = $data['name'];
-        $Payment->description = $data['description'];
-        $Payment->apiKey = $data['apiKey'];
-        $Payment->url = $data['url'];
 
-        if ($Payment->save()) {
+        $Extra = Extra::find($id);
+        $Extra->name = $data['name'];
+        Storage::delete($Extra->image);
+        $path = Storage::putFile('public/extras', $request->file('image'));
+        $Extra->image = $path;
+        $Extra->price = $data['price'];
+
+        if ($Extra->save()) {
+            $Extra->image = Storage::url($path);
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $Extra
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Failure to save payment'
+                'message' => 'Failure to save Extra'
             ];
 
             $this->status = 405;
@@ -172,7 +181,11 @@ class PaymentController extends Controller
      */
     public function destroy($id)
     {
-        if (Payment::where('id',$id)->forceDelete()) {
+        $Extra = Extra::where('id',$id)->get()[0];
+        $path = $Extra->image;
+
+        if ($Extra->forceDelete()) {
+            Storage::delete($path);
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok'
@@ -181,7 +194,7 @@ class PaymentController extends Controller
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Payment not found'
+                'message' => 'Extra not found'
             ];
 
             $this->status = 405;

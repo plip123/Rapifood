@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Order;
+use App\Extra;
+use App\Product;
 
 class OrderController extends Controller
 {
@@ -23,12 +25,21 @@ class OrderController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
+
+    public function priceCalculate ($productID,$extraID,$quantity) {
+        $Extras = Extra::where('id',$extraID)->get();
+        $Product = Product::where('id',$productID)->get();
+
+        
+    }
+
     public function store(Request $request)
     {
         $this->validate($request, [
-            'name' => 'required|string',
-            'description' => 'string',
-            'apiKey' => 'required|string'
+            'paymentID' => 'required|integer',
+            'productID' => 'required|integer',
+            'extraID' => 'required|integer',
+            'quantity' => 'required|integer'
         ]);
 
         $data = $request->all();

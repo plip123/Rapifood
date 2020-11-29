@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Role;
 use Illuminate\Http\Request;
-use App\Payment;
 
-class PaymentController extends Controller
+class RoleController extends Controller
 {
-
     private $responsedata;
     private $status;
 
@@ -28,38 +27,34 @@ class PaymentController extends Controller
     {
         $this->validate($request, [
             'name' => 'required|string',
-            'description' => 'string',
-            'apiKey' => 'required|string',
-            'url' => 'required|string'
+            'permission_lvl' => 'required|integer'
         ]);
 
         $data = $request->all();
-        $payment_table = Payment::latest()->first();
+        $role_table = Role::latest()->first();
 
-        if ($payment_table) {
-            $payment_id = $payment_table->id + 1;
+        if ($role_table) {
+            $role_id = $role_table->id + 1;
         } else {
-            $payment_id = 1;
+            $role_id = 1;
         }
         
-        $Payment = new Payment;
-        $Payment->id = $payment_id;
-        $Payment->name = $data['name'];
-        $Payment->description = $data['description'];
-        $Payment->apiKey = $data['apiKey'];
-        $Payment->apiKey = $data['url'];
+        $Role = new Role;
+        $Role->id = $role_id;
+        $Role->name = $data['name'];
+        $Role->permission_lvl = $data['permission_lvl'];
 
-        if ($Payment->save()) {
+        if ($Role->save()) {
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $Role
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Failure to save payment'
+                'message' => 'Failure to save role'
             ];
 
             $this->status = 405;
@@ -76,19 +71,19 @@ class PaymentController extends Controller
      */
     public function show($id)
     {
-        $Payment = Payment::where('id',$id)->get()[0];
+        $Role = Role::where('id',$id)->get()[0];
 
-        if ($Payment) {
+        if ($Role) {
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $Role
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Payment not found'
+                'message' => 'Role not found'
             ];
 
             $this->status = 405;
@@ -100,19 +95,19 @@ class PaymentController extends Controller
 
     public function index()
     {
-        $Payment = Payment::all();
+        $Role = Role::all();
 
-        if ($Payment) {
+        if ($Role) {
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $Role
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Payment not found'
+                'message' => 'Role not found'
             ];
 
             $this->status = 405;
@@ -132,30 +127,26 @@ class PaymentController extends Controller
     {
         $this->validate($request, [
             'name' => 'required|string',
-            'description' => 'string',
-            'apiKey' => 'required|string',
-            'url' => 'required|string'
+            'permission_lvl' => 'required|integer'
         ]);
 
         $data = $request->all();
         
-        $Payment = Payment::find($id);
-        $Payment->name = $data['name'];
-        $Payment->description = $data['description'];
-        $Payment->apiKey = $data['apiKey'];
-        $Payment->url = $data['url'];
-
-        if ($Payment->save()) {
+        $Role = Role::find($id);
+        $Role->name = $data['name'];
+        $Role->permission_lvl = $data['permission_lvl'];
+        
+        if ($Role->save()) {
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $Role
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Failure to save payment'
+                'message' => 'Failure to save role'
             ];
 
             $this->status = 405;
@@ -172,7 +163,7 @@ class PaymentController extends Controller
      */
     public function destroy($id)
     {
-        if (Payment::where('id',$id)->forceDelete()) {
+        if (Role::where('id',$id)->forceDelete()) {
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok'
@@ -181,7 +172,7 @@ class PaymentController extends Controller
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Payment not found'
+                'message' => 'Role not found'
             ];
 
             $this->status = 405;

@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Payment;
+use Illuminate\Support\Facades\Storage;
+use App\Product;
 
-class PaymentController extends Controller
+class ProductController extends Controller
 {
-
     private $responsedata;
     private $status;
 
@@ -28,38 +28,52 @@ class PaymentController extends Controller
     {
         $this->validate($request, [
             'name' => 'required|string',
+            'price' => 'required|regex:/^[0-9]+(\.[0-9][0-9]?)?$/',
+            'offert_price' => 'regex:/^[0-9]+(\.[0-9][0-9]?)?$/',
             'description' => 'string',
-            'apiKey' => 'required|string',
-            'url' => 'required|string'
+            'state' => 'required|string',
+            'offert' => 'required|boolean',
+            'image' => 'file',
+            'priority' => 'required|integer',
+            'storeID' => 'required|integer'
         ]);
 
         $data = $request->all();
-        $payment_table = Payment::latest()->first();
+        $product_table = Product::latest()->first();
 
-        if ($payment_table) {
-            $payment_id = $payment_table->id + 1;
+        if ($product_table) {
+            $product_id = $product_table->id + 1;
         } else {
-            $payment_id = 1;
+            $product_id = 1;
         }
-        
-        $Payment = new Payment;
-        $Payment->id = $payment_id;
-        $Payment->name = $data['name'];
-        $Payment->description = $data['description'];
-        $Payment->apiKey = $data['apiKey'];
-        $Payment->apiKey = $data['url'];
 
-        if ($Payment->save()) {
+        $path = Storage::putFile('public/products', $request->file('image'));
+        
+        $Product = new Product;
+        $Product->id = $product_id;
+        $Product->name = $data['name'];
+        $Product->price = $data['price'];
+        $Product->offert_price = $data['offert_price'];
+        $Product->description = $data['description'];
+        $Product->state = $data['state'];
+        $Product->offert = $data['offert'];
+        $Product->image = $path;
+        $Product->priority = $data['priority'];
+        $Product->storeID = $data['storeID'];
+
+        if ($Product->save()) {
+            $Product->id = $product_id;
+            $Product->image = Storage::url($path);
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $Product,
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Failure to save payment'
+                'message' => 'Failure to save product'
             ];
 
             $this->status = 405;
@@ -76,19 +90,20 @@ class PaymentController extends Controller
      */
     public function show($id)
     {
-        $Payment = Payment::where('id',$id)->get()[0];
+        $Product = Product::where('id',$id)->get()[0]   ;
 
-        if ($Payment) {
+        if ($Product) {
+            $Product->image = Storage::url($Product->image);
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $Product
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Payment not found'
+                'message' => 'Product not found'
             ];
 
             $this->status = 405;
@@ -100,19 +115,25 @@ class PaymentController extends Controller
 
     public function index()
     {
-        $Payment = Payment::all();
+        $Product = Product::all();
 
-        if ($Payment) {
+        if ($Product) {
+            $responseProduct = array();
+            foreach ($Product as $product) {
+                $product->image = Storage::url($product->image);
+                array_push($responseProduct, $product);
+            }
+
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $responseProduct
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Payment not found'
+                'message' => 'Product not found'
             ];
 
             $this->status = 405;
@@ -132,30 +153,41 @@ class PaymentController extends Controller
     {
         $this->validate($request, [
             'name' => 'required|string',
+            'price' => 'required|regex:/^[0-9]+(\.[0-9][0-9]?)?$/',
+            'offert_price' => 'regex:/^[0-9]+(\.[0-9][0-9]?)?$/',
             'description' => 'string',
-            'apiKey' => 'required|string',
-            'url' => 'required|string'
+            'state' => 'required|string',
+            'offert' => 'required|boolean',
+            'image' => 'file',
+            'priority' => 'required|integer',
         ]);
 
         $data = $request->all();
         
-        $Payment = Payment::find($id);
-        $Payment->name = $data['name'];
-        $Payment->description = $data['description'];
-        $Payment->apiKey = $data['apiKey'];
-        $Payment->url = $data['url'];
+        $Product = Product::find($id);
+        $Product->name = $data['name'];
+        $Product->price = $data['price'];
+        $Product->offert_price = $data['offert_price'];
+        $Product->description = $data['description'];
+        $Product->state = $data['state'];
+        $Product->offert = $data['offert'];
+        Storage::delete($Product->image);
+        $path = Storage::putFile('public/products', $request->file('image'));
+        $Product->image = $path;
+        $Product->priority = $data['priority'];
 
-        if ($Payment->save()) {
+        if ($Product->save()) {
+            $Product->image = Storage::url($path);
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $Product
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Failure to save payment'
+                'message' => 'Failure to save Product'
             ];
 
             $this->status = 405;
@@ -172,7 +204,11 @@ class PaymentController extends Controller
      */
     public function destroy($id)
     {
-        if (Payment::where('id',$id)->forceDelete()) {
+        $Product = Product::where('id',$id)->get()[0];
+        $path = $Product->image;
+
+        if ($Product->forceDelete()) {
+            Storage::delete($path);
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok'
@@ -181,7 +217,7 @@ class PaymentController extends Controller
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Payment not found'
+                'message' => 'Product not found'
             ];
 
             $this->status = 405;

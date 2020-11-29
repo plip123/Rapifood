@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Favorite;
 use Illuminate\Http\Request;
-use App\Payment;
 
-class PaymentController extends Controller
+class FavoriteController extends Controller
 {
-
     private $responsedata;
     private $status;
 
@@ -19,7 +18,7 @@ class PaymentController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Favorite a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
@@ -27,39 +26,38 @@ class PaymentController extends Controller
     public function store(Request $request)
     {
         $this->validate($request, [
-            'name' => 'required|string',
-            'description' => 'string',
-            'apiKey' => 'required|string',
-            'url' => 'required|string'
+            'userID' => 'required|integer',
+            'productID' => 'required|integer',
+            'status' => 'required|string'
         ]);
 
         $data = $request->all();
-        $payment_table = Payment::latest()->first();
+        $favorites_table = Favorite::latest()->first();
 
-        if ($payment_table) {
-            $payment_id = $payment_table->id + 1;
+        if ($favorites_table) {
+            $favorites_id = $favorites_table->id + 1;
         } else {
-            $payment_id = 1;
+            $favorites_id = 1;
         }
         
-        $Payment = new Payment;
-        $Payment->id = $payment_id;
-        $Payment->name = $data['name'];
-        $Payment->description = $data['description'];
-        $Payment->apiKey = $data['apiKey'];
-        $Payment->apiKey = $data['url'];
+        $Favorite = new Favorite;
+        $Favorite->id = $favorites_id;
+        $Favorite->userID = $data['userID'];
+        $Favorite->productID = $data['productID'];
+        $Favorite->status = $data['status'];
 
-        if ($Payment->save()) {
+        if ($Favorite->save()) {
+            $Favorite->id = $favorites_id;
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $Favorite
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Failure to save payment'
+                'message' => 'Failure to save favorite'
             ];
 
             $this->status = 405;
@@ -76,19 +74,19 @@ class PaymentController extends Controller
      */
     public function show($id)
     {
-        $Payment = Payment::where('id',$id)->get()[0];
+        $Favorite = Favorite::where('id',$id)->get()[0];
 
-        if ($Payment) {
+        if ($Favorite) {
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $Favorite
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Payment not found'
+                'message' => 'Favorite not found'
             ];
 
             $this->status = 405;
@@ -100,19 +98,19 @@ class PaymentController extends Controller
 
     public function index()
     {
-        $Payment = Payment::all();
+        $Favorite = Favorite::all();
 
-        if ($Payment) {
+        if ($Favorite) {
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $Favorite
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Payment not found'
+                'message' => 'Favorite not found'
             ];
 
             $this->status = 405;
@@ -131,31 +129,29 @@ class PaymentController extends Controller
     public function update(Request $request, $id)
     {
         $this->validate($request, [
-            'name' => 'required|string',
-            'description' => 'string',
-            'apiKey' => 'required|string',
-            'url' => 'required|string'
+            'userID' => 'required|integer',
+            'productID' => 'required|integer',
+            'status' => 'required|string'
         ]);
 
         $data = $request->all();
         
-        $Payment = Payment::find($id);
-        $Payment->name = $data['name'];
-        $Payment->description = $data['description'];
-        $Payment->apiKey = $data['apiKey'];
-        $Payment->url = $data['url'];
-
-        if ($Payment->save()) {
+        $Favorite = Favorite::find($id);
+        $Favorite->userID = $data['userID'];
+        $Favorite->productID = $data['productID'];
+        $Favorite->status = $data['status'];
+        
+        if ($Favorite->save()) {
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $Favorite
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Failure to save payment'
+                'message' => 'Failure to save favorite'
             ];
 
             $this->status = 405;
@@ -172,7 +168,7 @@ class PaymentController extends Controller
      */
     public function destroy($id)
     {
-        if (Payment::where('id',$id)->forceDelete()) {
+        if (Favorite::where('id',$id)->forceDelete()) {
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok'
@@ -181,7 +177,7 @@ class PaymentController extends Controller
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Payment not found'
+                'message' => 'Favorite not found'
             ];
 
             $this->status = 405;

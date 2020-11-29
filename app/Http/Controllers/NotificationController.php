@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Notification;
 use Illuminate\Http\Request;
-use App\Payment;
 
-class PaymentController extends Controller
+class NotificationController extends Controller
 {
-
     private $responsedata;
     private $status;
 
@@ -19,7 +18,7 @@ class PaymentController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Notification a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
@@ -27,39 +26,37 @@ class PaymentController extends Controller
     public function store(Request $request)
     {
         $this->validate($request, [
-            'name' => 'required|string',
-            'description' => 'string',
-            'apiKey' => 'required|string',
-            'url' => 'required|string'
+            'userID' => 'required|integer',
+            'message' => 'required|string',
+            'state' => 'required|string'
         ]);
 
         $data = $request->all();
-        $payment_table = Payment::latest()->first();
+        $notification_table = Notification::latest()->first();
 
-        if ($payment_table) {
-            $payment_id = $payment_table->id + 1;
+        if ($notification_table) {
+            $notification_id = $notification_table->id + 1;
         } else {
-            $payment_id = 1;
+            $notification_id = 1;
         }
         
-        $Payment = new Payment;
-        $Payment->id = $payment_id;
-        $Payment->name = $data['name'];
-        $Payment->description = $data['description'];
-        $Payment->apiKey = $data['apiKey'];
-        $Payment->apiKey = $data['url'];
+        $Notification = new Notification;
+        $Notification->id = $notification_id;
+        $Notification->userID = $data['userID'];
+        $Notification->message = $data['message'];
+        $Notification->state = $data['state'];
 
-        if ($Payment->save()) {
+        if ($Notification->save()) {
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $Notification
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Failure to save payment'
+                'message' => 'Failure to save notification'
             ];
 
             $this->status = 405;
@@ -76,19 +73,19 @@ class PaymentController extends Controller
      */
     public function show($id)
     {
-        $Payment = Payment::where('id',$id)->get()[0];
+        $Notification = Notification::where('id',$id)->get()[0];
 
-        if ($Payment) {
+        if ($Notification) {
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $Notification
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Payment not found'
+                'message' => 'Notification not found'
             ];
 
             $this->status = 405;
@@ -100,19 +97,19 @@ class PaymentController extends Controller
 
     public function index()
     {
-        $Payment = Payment::all();
+        $Notification = Notification::all();
 
-        if ($Payment) {
+        if ($Notification) {
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $Notification
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Payment not found'
+                'message' => 'Notification not found'
             ];
 
             $this->status = 405;
@@ -131,31 +128,29 @@ class PaymentController extends Controller
     public function update(Request $request, $id)
     {
         $this->validate($request, [
-            'name' => 'required|string',
-            'description' => 'string',
-            'apiKey' => 'required|string',
-            'url' => 'required|string'
+            'userID' => 'required|integer',
+            'message' => 'required|string',
+            'state' => 'required|string'
         ]);
 
         $data = $request->all();
         
-        $Payment = Payment::find($id);
-        $Payment->name = $data['name'];
-        $Payment->description = $data['description'];
-        $Payment->apiKey = $data['apiKey'];
-        $Payment->url = $data['url'];
-
-        if ($Payment->save()) {
+        $Notification = Notification::find($id);
+        $Notification->userID = $data['userID'];
+        $Notification->message = $data['message'];
+        $Notification->state = $data['state'];
+        
+        if ($Notification->save()) {
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $Notification
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Failure to save payment'
+                'message' => 'Failure to save notification'
             ];
 
             $this->status = 405;
@@ -172,7 +167,7 @@ class PaymentController extends Controller
      */
     public function destroy($id)
     {
-        if (Payment::where('id',$id)->forceDelete()) {
+        if (Notification::where('id',$id)->forceDelete()) {
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok'
@@ -181,7 +176,7 @@ class PaymentController extends Controller
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Payment not found'
+                'message' => 'Notification not found'
             ];
 
             $this->status = 405;

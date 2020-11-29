@@ -18,7 +18,7 @@ class PaymentGatewayController extends Controller
     {
         $this->responsedata = array();
         $this->status = 200;
-        $this->url = "https://back.react-bank.ml/payment";
+        $this->url = '';
         $this->card = '';
         $this->apiKey = '';
         $this->commerce = 'Rapifood';
@@ -34,11 +34,11 @@ class PaymentGatewayController extends Controller
             'cardName' => 'required|string',
             'amount' => 'required|integer',
             'description' => 'required|string',
-            'ref' => 'string'
         ]);
 
         $Payment = Payment::where("id",$request->get('paymentID'));
         $this->apiKey = $Payment->get("apiKey")[0]["apiKey"];
+        $this->url = $Payment->get("url")[0]["url"];
         
         $args = array(
             "creditCardNumber" => $request["cardNumber"],
@@ -48,7 +48,6 @@ class PaymentGatewayController extends Controller
             "amount" => $request["amount"],
             "description" => $request["description"],
             "commerce" => $this->commerce,
-            "ref" => $request["ref"]
         );
 
         $data = json_encode($args);

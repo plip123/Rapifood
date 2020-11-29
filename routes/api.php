@@ -25,5 +25,12 @@ Route::post('login','Auth\LoginController@login');
 Route::group(['middleware' => 'auth:api'], function () {
     Route::resource('payment','PaymentController');
     Route::post('pay','PaymentGatewayController@index');
-    
+    Route::resource('product', 'ProductController');
+    Route::resource('store', 'StoreController');
+    Route::resource('extra', 'ExtraController');
+    Route::resource('ingredient', 'IngredientController');
+    Route::resource('role', 'RoleController');
+    Route::resource('notification', 'NotificationController');
+    Route::resource('favorite', 'FavoriteController');
+    Route::resource('user', 'UserController');
 });

@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Store;
 use Illuminate\Http\Request;
-use App\Payment;
+use Illuminate\Support\Facades\Storage;
 
-class PaymentController extends Controller
+class StoreController extends Controller
 {
-
     private $responsedata;
     private $status;
 
@@ -28,38 +28,44 @@ class PaymentController extends Controller
     {
         $this->validate($request, [
             'name' => 'required|string',
-            'description' => 'string',
-            'apiKey' => 'required|string',
-            'url' => 'required|string'
+            'userID' => 'required|integer',
+            'logo' => 'file',
+            'address' => 'required|string',
+            'city' => 'required|string'
         ]);
 
         $data = $request->all();
-        $payment_table = Payment::latest()->first();
+        $store_table = Store::latest()->first();
 
-        if ($payment_table) {
-            $payment_id = $payment_table->id + 1;
+        if ($store_table) {
+            $store_id = $store_table->id + 1;
         } else {
-            $payment_id = 1;
+            $store_id = 1;
         }
-        
-        $Payment = new Payment;
-        $Payment->id = $payment_id;
-        $Payment->name = $data['name'];
-        $Payment->description = $data['description'];
-        $Payment->apiKey = $data['apiKey'];
-        $Payment->apiKey = $data['url'];
 
-        if ($Payment->save()) {
+        $path = Storage::putFile('public/stores', $request->file('logo'));
+
+        $Store = new Store;
+        $Store->id = $store_id;
+        $Store->name = $data['name'];
+        $Store->userID = $data['userID'];
+        $Store->logo = $path;
+        $Store->address = $data['address'];
+        $Store->city = $data['city'];
+
+        if ($Store->save()) {
+            $Store->id = $store_id;
+            $Store->logo = Storage::url($path);
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $Store,
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Failure to save payment'
+                'message' => 'Failure to save store'
             ];
 
             $this->status = 405;
@@ -76,19 +82,20 @@ class PaymentController extends Controller
      */
     public function show($id)
     {
-        $Payment = Payment::where('id',$id)->get()[0];
+        $Store = Store::where('id',$id)->get();
 
-        if ($Payment) {
+        if ($Store) {
+            $Store->logo = Storage::url($Store[0]->image);
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $Store[0]
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Payment not found'
+                'message' => 'Store not found'
             ];
 
             $this->status = 405;
@@ -100,19 +107,25 @@ class PaymentController extends Controller
 
     public function index()
     {
-        $Payment = Payment::all();
+        $Store = Store::all();
 
-        if ($Payment) {
+        if ($Store) {
+            $responseStore = array();
+            foreach ($Store as $store) {
+                $store->logo = Storage::url($store->logo);
+                array_push($responseStore, $store);
+            }
+
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $responseStore
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Payment not found'
+                'message' => 'Store not found'
             ];
 
             $this->status = 405;
@@ -132,30 +145,35 @@ class PaymentController extends Controller
     {
         $this->validate($request, [
             'name' => 'required|string',
-            'description' => 'string',
-            'apiKey' => 'required|string',
-            'url' => 'required|string'
+            'userID' => 'required|integer',
+            'logo' => 'file',
+            'address' => 'required|string',
+            'city' => 'required|string'
         ]);
 
         $data = $request->all();
         
-        $Payment = Payment::find($id);
-        $Payment->name = $data['name'];
-        $Payment->description = $data['description'];
-        $Payment->apiKey = $data['apiKey'];
-        $Payment->url = $data['url'];
+        $Store = Store::find($id);
+        $Store->name = $data['name'];
+        $Store->userID = $data['userID'];
+        Storage::delete($Store->image);
+        $path = Storage::putFile('public/stores', $request->file('logo'));
+        $Store->logo = $path;
+        $Store->address = $data['address'];
+        $Store->city = $data['city'];
 
-        if ($Payment->save()) {
+        if ($Store->save()) {
+            $Store->logo = Storage::url($path);
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Payment
+                'data' => $Store
             ];
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Failure to save payment'
+                'message' => 'Failure to save store'
             ];
 
             $this->status = 405;
@@ -172,7 +190,11 @@ class PaymentController extends Controller
      */
     public function destroy($id)
     {
-        if (Payment::where('id',$id)->forceDelete()) {
+        $Store = Store::where('id',$id)->get()[0];
+        $path = $Store->image;
+
+        if ($Store->forceDelete()) {
+            Storage::delete($path);
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok'
@@ -181,7 +203,7 @@ class PaymentController extends Controller
             $this->responsedata = [
                 'error'=> ['Failed'],
                 'status' => false,
-                'message' => 'Payment not found'
+                'message' => 'Store not found'
             ];
 
             $this->status = 405;
