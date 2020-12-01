@@ -40,7 +40,8 @@ class RegisterController extends Controller
             'roleID' => 3,
             'address' => "",
             'city' => "",
-            'password' => Hash::make($request->get('password'))
+            'password' => Hash::make($request->get('password')),
+            'avatar' => ""
         ]);
 
         

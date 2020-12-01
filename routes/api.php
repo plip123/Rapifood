@@ -21,12 +21,13 @@ Route::middleware('auth:api')->get('/me', function (Request $request) {
 Route::post('signup','Auth\RegisterController@store');
 Route::post('login','Auth\LoginController@login');
 
+Route::get('productFilter', 'ProductController@productFilter');
+
 
 Route::group(['middleware' => 'auth:api'], function () {
     Route::resource('payment','PaymentController');
     Route::post('pay','PaymentGatewayController@index');
     Route::resource('product', 'ProductController');
-    Route::get('productFilter', 'ProductController@productFilter');
     Route::resource('store', 'StoreController');
     Route::resource('extra', 'ExtraController');
     Route::resource('ingredient', 'IngredientController');

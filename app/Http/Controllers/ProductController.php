@@ -25,27 +25,45 @@ class ProductController extends Controller
     public function productFilter(Request $request)
     {
         $this->validate($request, [
-            'restaurant_id' => 'integer',
-            'type_id' => 'integer',
-            'min_price' => 'regex:/^[0-9]+(\.[0-9][0-9]?)?$/',
-            'max_price' => 'regex:/^[0-9]+(\.[0-9][0-9]?)?$/',
-            'like' => 'string'
+            'restaurant_id' => 'array',
+            'restaurant_id.*' => 'integer',
+            'type_id' => 'array',
+            'type_id.*' => 'integer',
+            'min_price' => 'numeric',
+            'max_price' => 'numeric',
+            'like' => 'string',
+            'super_combo' => 'boolean'
         ]);
 
         $data = $request->all();
 
-        $Product = Product::where([
-            ['name', 'like', $data['like'] ? '%'. $data['like'] .'%' : ""],
-            $data['type_id'] ? ['categoryID', '=', $data['type_id']] : ['price', '>=', $data['min_price']],
-            $data['restaurant_id'] ? ['storeID', '=', $data['restaurant_id']] : ['price', '>=', $data['min_price']],
-            ['price', '>=', $data['min_price']],
-            $data['max_price'] > 0 ? ['price', '<=', $data['max_price']] : ['price', '>=', $data['max_price']]
-        ])->get();
+        $products = Product::all();
 
-        return $Product;
+        if (isset($data['restaurant_id']) && is_array($data['restaurant_id'])){
+            $products = $products->whereIn('storeID', $data['restaurant_id']);
+        }
 
+        if (isset($data['type_id']) && is_array($data['type_id'])){
+            $products = $products->whereIn('categoryID', $data['type_id']);
+        }
 
-        return response()->json($this->responsedata,$this->status);
+        if (isset($data['min_price'])){
+            $products = $products->where('price', '>=', $data['min_price']);
+        }
+
+        if (isset($data['max_price'])){
+            $products = $products->where('price', '<=', $data['max_price']);
+        }
+
+        if (isset($data['like'])){
+            $products = $products->where('name', 'like', '%' . $data['like'] . '%');
+        }
+
+        if (isset($data['super_combo']) && $data['super_combo']){
+            $products = $products->where('priority', '=', 3);
+        }
+
+        return $products;
     }
 
 
