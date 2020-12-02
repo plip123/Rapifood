@@ -24,6 +24,368 @@
     }
 </p>
 
+## Product CRUD
+<p>
+    Insert
+    http://127.0.0.1:8000/api/product
+    method:POST
+    
+    {
+        'name': 'required|string',
+        'price': 'required|double',
+        'offert_price': 'double',
+        'description': 'string',
+        'state': 'required|string',
+        'offert': 'required|boolean',
+        'image': 'required|string',
+        'priority': 'required|integer',
+        'categoryID' : 'required|integer',
+        'ingredientID' : [integer]
+    }
+
+    Show
+    http://127.0.0.1:8000/api/product/{id}
+    method:GET
+
+    Get all
+    http://127.0.0.1:8000/api/product/
+    method:GET
+    
+    Update
+    http://127.0.0.1:8000/api/product/{id}
+    method:PUT
+
+    {
+        'name': 'required|string',
+        'price': 'required|double',
+        'offert_price': 'double',
+        'description': 'string',
+        'state': 'required|string',
+        'offert': 'required|boolean',
+        'image': 'required|string',
+        'priority': 'required|integer',
+        'categoryID' : 'required|integer',
+        'ingredientID' : [integer]
+    }
+    
+    Delete
+    http://127.0.0.1:8000/api/product/{id}
+    method:DELETE
+
+    Filter
+    http://127.0.0.1:8000/api/productFilter
+    method:GET
+
+    {
+        'restaurant_id': 'integer',
+        'type_id': 'integer',
+        'min_price': 'double',
+        'max_price': 'double',
+        'like': 'string'
+    }
+</p>
+
+## Extras CRUD
+<p>
+    Insert
+    http://127.0.0.1:8000/api/extra
+    method:POST
+
+    {
+        'name': 'required|string',
+        'image': 'file',
+        'price': 'required|double'
+    }
+
+    All
+    http://127.0.0.1:8000/api/extra/
+    method:GET
+
+    Show
+    http://127.0.0.1:8000/api/extra/{id}
+    method:GET
+    
+    Update
+    http://127.0.0.1:8000/api/extra/{id}
+    method:PUT
+
+    {
+        'name': 'required|string',
+        'image': 'file',
+        'price': 'required|double'
+    }
+    
+    Delete
+    http://127.0.0.1:8000/api/extra/{id}
+    method:DELETE  
+</p>
+
+## Store CRUD
+<p>
+    Insert
+    http://127.0.0.1:8000/api/store
+    method:POST
+
+    {
+        'name': 'required|string',
+        'userID': 'required|integer',
+        'logo': 'file',
+        'address': 'required|string',
+        'city': 'required|string'
+    }
+
+    All
+    http://127.0.0.1:8000/api/store/
+    method:GET
+
+    Show
+    http://127.0.0.1:8000/api/store/{id}
+    method:GET
+    
+    Update
+    http://127.0.0.1:8000/api/store/{id}
+    method:PUT
+
+    {
+        'name': 'required|string',
+        'logo': 'file',
+        'address': 'required|string',
+        'city': 'required|string'
+    }
+    
+    Delete
+    http://127.0.0.1:8000/api/store/{id}
+    method:DELETE  
+</p>
+
+
+## Ingredient CRUD
+<p>
+    Insert
+    http://127.0.0.1:8000/api/ingredient
+    method:POST
+
+    {
+        'name': 'required|string',
+    }
+
+    All
+    http://127.0.0.1:8000/api/ingredient/
+    method:GET
+
+    Show
+    http://127.0.0.1:8000/api/ingredient/{id}
+    method:GET
+    
+    Update
+    http://127.0.0.1:8000/api/ingredient/{id}
+    method:PUT
+
+    {
+        'name': 'required|string',
+    }
+    
+    Delete
+    http://127.0.0.1:8000/api/ingredient/{id}
+    method:DELETE  
+</p>
+
+
+## Role CRUD
+<p>
+    Insert
+    http://127.0.0.1:8000/api/role
+    method:POST
+
+    {
+        'name': 'required|string',
+        'permission_lvl': 'required|integer'
+    }
+
+    All
+    http://127.0.0.1:8000/api/role/
+    method:GET
+
+    Show
+    http://127.0.0.1:8000/api/role/{id}
+    method:GET
+    
+    Update
+    http://127.0.0.1:8000/api/role/{id}
+    method:PUT
+
+    {
+        'name': 'required|string',
+        'permission_lvl': 'required|integer'
+    }
+    
+    Delete
+    http://127.0.0.1:8000/api/role/{id}
+    method:DELETE  
+</p>
+
+
+## Notifications CRUD
+<p>
+    Insert
+    http://127.0.0.1:8000/api/notification
+    method:POST
+
+    {
+        'userID': 'required|integer',
+        'message': 'required|string',
+        'state': 'required|string'
+    }
+
+    All
+    http://127.0.0.1:8000/api/notification/
+    method:GET
+
+    Show
+    http://127.0.0.1:8000/api/notification/{id}
+    method:GET
+    
+    Update
+    http://127.0.0.1:8000/api/notification/{id}
+    method:PUT
+
+    {
+        'userID': 'required|integer',
+        'message': 'required|string',
+        'state': 'required|string'
+    }
+    
+    Delete
+    http://127.0.0.1:8000/api/notification/{id}
+    method:DELETE  
+</p>
+
+
+## Favorites CRUD
+<p>
+    Insert
+    http://127.0.0.1:8000/api/favorites
+    method:POST
+
+    {
+        'userID': 'required|integer',
+        'productID': 'required|integer',
+        'status': 'required|string'
+    }
+
+    All
+    http://127.0.0.1:8000/api/favorites/
+    method:GET
+
+    Show
+    http://127.0.0.1:8000/api/favorites/{id}
+    method:GET
+    
+    Update
+    http://127.0.0.1:8000/api/favorites/{id}
+    method:PUT
+
+    {
+        'userID': 'required|integer',
+        'productID': 'required|integer',
+        'status': 'required|string'
+    }
+    
+    Delete
+    http://127.0.0.1:8000/api/favorites/{id}
+    method:DELETE  
+</p>
+
+
+## Category CRUD
+<p>
+    Insert
+    http://127.0.0.1:8000/api/category
+    method:POST
+
+    {
+        'name': 'required|string',
+        'description': 'string'
+    }
+
+    All
+    http://127.0.0.1:8000/api/category/
+    method:GET
+
+    Show
+    http://127.0.0.1:8000/api/category/{id}
+    method:GET
+    
+    Update
+    http://127.0.0.1:8000/api/category/{id}
+    method:PUT
+
+    {
+        'name': 'required|string',
+        'description': 'string'
+    }
+    
+    Delete
+    http://127.0.0.1:8000/api/category/{id}
+    method:DELETE  
+</p>
+
+
+## Payment CRUD
+<p>
+    Insert
+    http://127.0.0.1:8000/api/payment
+    method:POST
+    
+    {
+        'name': 'required|string',
+        'description': 'string',
+        'apiKey': 'required|string',
+        'url': 'required|string'
+    }
+
+    Show
+    http://127.0.0.1:8000/api/payment/{id}
+    method:GET
+
+    All
+    http://127.0.0.1:8000/api/payment/
+    method:GET
+    
+    Update
+    http://127.0.0.1:8000/api/payment/1
+    method:PUT
+    {
+        'name': 'required|string',
+        'description': 'string',
+        'apiKey': 'required|string',
+        'url': 'required|string'
+    }
+    
+    Delete
+    http://127.0.0.1:8000/api/payment/{id}
+    method:DELETE  
+</p>
+
+## Pay
+<p>
+    http://127.0.0.1:8000/api/pay
+    
+    {
+        'paymentID': 'required|integer',
+        'cardNumber': 'required|string',
+        'cardDate': 'required|string',
+        'securityCode': 'required|string',
+        'cardName': 'required|string',
+        'amount': 'required|integer',
+        'description': 'required|string'
+    }
+</p>
+
+## Payment Order
+<p>
+ 
+</p>
 
 
 

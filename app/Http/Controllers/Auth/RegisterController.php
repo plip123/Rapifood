@@ -27,10 +27,7 @@ class RegisterController extends Controller
             'name' => 'required|string',
             'lastname' => 'required|string',
             'email'    => 'required|string|email|unique:users',
-            'roleID' => 'required|integer',
-            'address' => 'required|string',
-            'city' => 'required|string',
-            'password' => 'required|string|confirmed',
+            'password' => 'required|string',
         ]);
 
         $user = null;
@@ -40,10 +37,11 @@ class RegisterController extends Controller
             'name' => $request->get('name'),
             'lastname' => $request->get('lastname'),
             'email'    => strtolower($request->get('email')),
-            'roleID' => $request->get('roleID'),
-            'address' => $request->get('address'),
-            'city' => $request->get('city'),
-            'password' => Hash::make($request->get('password'))
+            'roleID' => 3,
+            'address' => "",
+            'city' => "",
+            'password' => Hash::make($request->get('password')),
+            'avatar' => ""
         ]);
 
         
