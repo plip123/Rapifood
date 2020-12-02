@@ -14,13 +14,11 @@ class ProductController extends Controller
     private $responsedata;
     private $status;
 
-
     public function __construct()
     {
         $this->responsedata = array();
         $this->status = 200;
     }
-
 
     public function productFilter(Request $request)
     {
@@ -37,7 +35,7 @@ class ProductController extends Controller
 
         $data = $request->all();
 
-        $products = Product::all();
+        $products = new Product;
 
         if (isset($data['restaurant_id']) && is_array($data['restaurant_id'])){
             $products = $products->whereIn('storeID', $data['restaurant_id']);
@@ -63,7 +61,7 @@ class ProductController extends Controller
             $products = $products->where('priority', '=', 3);
         }
 
-        return $products;
+        return $products->get();
     }
 
 

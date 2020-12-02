@@ -21,7 +21,7 @@ Route::middleware('auth:api')->get('/me', function (Request $request) {
 Route::post('signup','Auth\RegisterController@store');
 Route::post('login','Auth\LoginController@login');
 
-Route::get('productFilter', 'ProductController@productFilter');
+Route::post('productFilter', 'ProductController@productFilter');
 
 
 Route::group(['middleware' => 'auth:api'], function () {
