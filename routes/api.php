@@ -22,12 +22,12 @@ Route::post('signup','Auth\RegisterController@store');
 Route::post('login','Auth\LoginController@login');
 
 Route::post('productFilter', 'ProductController@productFilter');
+Route::resource('product', 'ProductController');
 
 
 Route::group(['middleware' => 'auth:api'], function () {
     Route::resource('payment','PaymentController');
     Route::post('pay','PaymentGatewayController@index');
-    Route::resource('product', 'ProductController');
     Route::resource('store', 'StoreController');
     Route::resource('extra', 'ExtraController');
     Route::resource('ingredient', 'IngredientController');
