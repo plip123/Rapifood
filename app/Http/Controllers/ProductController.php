@@ -30,7 +30,8 @@ class ProductController extends Controller
             'min_price' => 'numeric',
             'max_price' => 'numeric',
             'like' => 'string',
-            'super_combo' => 'boolean'
+            'super_combo' => 'boolean',
+            'destacado' => 'boolean'
         ]);
 
         $data = $request->all();
@@ -59,6 +60,10 @@ class ProductController extends Controller
 
         if (isset($data['super_combo']) && $data['super_combo']){
             $products = $products->where('priority', '=', 3);
+        }
+
+        if (isset($data['destacado']) && $data['destacado']) {
+            $products = $products->where('priority', '=', 2);
         }
 
         return $products->get();
