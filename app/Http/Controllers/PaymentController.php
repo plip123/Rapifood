@@ -47,7 +47,7 @@ class PaymentController extends Controller
         $Payment->name = $data['name'];
         $Payment->description = $data['description'];
         $Payment->apiKey = $data['apiKey'];
-        $Payment->apiKey = $data['url'];
+        $Payment->url = $data['url'];
 
         if ($Payment->save()) {
             $this->responsedata = [

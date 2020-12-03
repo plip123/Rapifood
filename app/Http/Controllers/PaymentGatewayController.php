@@ -32,7 +32,7 @@ class PaymentGatewayController extends Controller
             'cardDate' => 'required|string',
             'securityCode' => 'required|string',
             'cardName' => 'required|string',
-            'amount' => 'required|integer',
+            'amount' => 'required|regex:/^[0-9]+(\.[0-9][0-9]?)?$/',
             'description' => 'required|string',
         ]);
 
@@ -45,12 +45,14 @@ class PaymentGatewayController extends Controller
             "creditCardExpirationDate" => $request["cardDate"],
             "creditCardSecurityCode" => $request["securityCode"],
             "creditCardName" => $request["cardName"],
-            "amount" => $request["amount"],
+            "amount" => intval($request["amount"]),
             "description" => $request["description"],
             "commerce" => $this->commerce,
         );
 
         $data = json_encode($args);
+
+        //return $data;
 
         $curl = curl_init($this->url);
         curl_setopt( $curl, CURLOPT_POSTFIELDS, $data);
