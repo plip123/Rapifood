@@ -38,11 +38,11 @@ class ProductController extends Controller
 
         $products = new Product;
 
-        if (isset($data['restaurant_id']) && is_array($data['restaurant_id'])){
+        if (isset($data['restaurant_id']) && is_array($data['restaurant_id']) && !empty($data['restaurant_id'])){
             $products = $products->whereIn('storeID', $data['restaurant_id']);
         }
 
-        if (isset($data['type_id']) && is_array($data['type_id'])){
+        if (isset($data['type_id']) && is_array($data['type_id']) && !empty($data['type_id'])){
             $products = $products->whereIn('categoryID', $data['type_id']);
         }
 
