@@ -42,4 +42,5 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::put('userEdit', 'UserController@update');
     Route::put('userRole', 'UserController@changeRole');
     Route::get('users', 'UserController@allUsers');
+    Route::resource('order', 'OrderController');
 });

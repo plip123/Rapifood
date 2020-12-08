@@ -4,6 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Payment;
+use App\Order;
+use App\Extra;
+use App\Product;
+use App\ExtrasProductOrder;
+use App\ProductOrders;
 
 class PaymentGatewayController extends Controller
 {
@@ -24,19 +29,50 @@ class PaymentGatewayController extends Controller
         $this->commerce = 'Rapifood';
     }
 
+
+    public function calculateAmount ($orderID) {
+        $total = 0;
+        $Orders = Order::where('id',$orderID)->get()[0];
+        if (!empty($Orders)) {   
+            $ProductOrders = ProductOrders::where('orderID',$orderID)->get();
+            foreach ($ProductOrders as $values) {
+                $Product = Product::where('id',$values['productID'])->get();
+                $Product = !empty($Product) ? $Product[0] : null;
+                if ($Product) {
+                    if ($Product->offert == 1) {
+                        $total += $Product->offert_price;
+                    } else {
+                        $total += $Product->price;
+                    }
+                }
+                $ProductOrderExtras = ExtrasProductOrder::where('productOrderID',$values['id'])->get();
+                foreach ($ProductOrderExtras as $extra) {
+                    $Extra = Extra::where('id',$extra['extraID'])->get();
+                    $Extra = count($Extra) > 0 ? $Extra[0] : null;
+                    if ($Extra) {
+                        $total += $Extra->price * $extra['quantity'];
+                    }
+                }
+            }
+        }
+
+        return $total;
+    }
+
+
     public function index(Request $request) {
         //return $request;
         $this->validate($request, [
-            'paymentID' => 'required|integer',
+            'orderID' => 'required|integer',
             'cardNumber' => 'required|string',
             'cardDate' => 'required|string',
             'securityCode' => 'required|string',
             'cardName' => 'required|string',
-            'amount' => 'required|regex:/^[0-9]+(\.[0-9][0-9]?)?$/',
             'description' => 'required|string',
         ]);
-
-        $Payment = Payment::where("id",$request->get('paymentID'));
+        
+        $amount = $this->calculateAmount($data['orderID']);
+        $Payment = Payment::where("active",1);
         $this->apiKey = $Payment->get("apiKey")[0]["apiKey"];
         $this->url = $Payment->get("url")[0]["url"];
         
@@ -45,7 +81,7 @@ class PaymentGatewayController extends Controller
             "creditCardExpirationDate" => $request["cardDate"],
             "creditCardSecurityCode" => $request["securityCode"],
             "creditCardName" => $request["cardName"],
-            "amount" => intval($request["amount"]),
+            "amount" => intval($amount),
             "description" => $request["description"],
             "commerce" => $this->commerce,
         );

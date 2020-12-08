@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Order;
-use App\ExtraProductOrder;
-use App\ProductOrder;
+use App\Extra;
+use App\Product;
+use App\ExtrasProductOrder;
+use App\ProductOrders;
 
 class OrderController extends Controller
 {
@@ -27,23 +29,47 @@ class OrderController extends Controller
      * @return \Illuminate\Http\Response
      */
 
-    public function priceCalculate ($productID,$extraID,$quantity) {
-        $Extras = Extra::where('id',$extraID)->get();
-        $Product = Product::where('id',$productID)->get();
+    public function priceCalculate ($order) {
+        $total = 0;
 
-        
+        if ($order) {
+            foreach ($order as $values) {
+                $Product = Product::where('id',$values['id'])->get();
+                $Product = !empty($Product) ? $Product[0] : null;
+                if ($Product) {
+                    if ($Product->offert == 1) {
+                        $total += $Product->offert_price;
+                    } else {
+                        $total += $Product->price;
+                    }
+                }
+
+                foreach ($values['extras'] as $extra) {
+                    $Extra = Extra::where('id',$extra['id'])->get();
+                    $Extra = count($Extra) > 0 ? $Extra[0] : null;
+                    if ($Extra) {
+                        $total += $Extra->price * $extra['quantity'];
+                    }
+                }
+            }
+        }
+
+        return $total;
     }
 
     public function store(Request $request)
     {
         $this->validate($request, [
             'paymentID' => 'integer',
-            'quantity' => 'required|integer',
             'products' => 'required|array',
-            'products.*' => 'required'
+            /*'products.id' => 'required|integer',
+            'products.extras' => 'required|array',
+            'products.extras.id' => 'integer',
+            'products.extras.quantity' => 'integer',*/
         ]);
 
         $data = $request->all();
+        $price = $this->priceCalculate($data["products"]);
         $order_table = Order::latest()->first();
         $User = Auth::user();
 
@@ -62,30 +88,34 @@ class OrderController extends Controller
         if ($Order->save()) {
             $Order->id = $order_id;
             foreach ($data['products'] as $product) {
-                $ProductOrder = new ProductOrder;
-                $ProductOrder->id = $order_id;
+                $productOrder_table = ProductOrders::latest()->first();
+                if ($productOrder_table) {
+                    $productOrder_id = $productOrder_table->id + 1;
+                } else {
+                    $productOrder_id = 1;
+                }
+
+                $ProductOrder = new ProductOrders;
+                $ProductOrder->id = $productOrder_id;
                 $ProductOrder->productID = $product['id'];
                 $ProductOrder->orderID = $order_id;
 
                 if ($ProductOrder->save()) {
-                    $productOrder_table = ExtraProductOrder::latest()->first();
-                    if ($productOrder_table) {
-                        $productOrder_id = $productOrder_table->id + 1;
-                    } else {
-                        $productOrder_id = 1;
-                    }
                     $ProductOrder->id = $productOrder_id;
-                    foreach ($product['extras'] as $extraID) {
-                        $extraProductOrder = ExtraProductOrder::latest()->first();
-                        if ($extraProductOrder) {
-                            $extraOrder_id = $extraProductOrder->id + 1;
+                    foreach ($product['extras'] as $extra) {
+                        $extraProductOrder_table = ExtrasProductOrder::latest()->first();
+                        if ($extraProductOrder_table) {
+                            $extraProductOrder_id = $extraProductOrder_table->id + 1;
                         } else {
-                            $extraOrder_id = 1;
+                            $extraProductOrder_id = 1;
                         }
-                        $ExtraProductOrder = new ExtraProductOrder;
-                        $ExtraProductOrder->extraID = $extraID;
-                        $ExtraProductOrder->productOrderID = $extraOrder_id;
-                        $ProductOrder->save();
+
+                        $ExtraProductOrder = new ExtrasProductOrder;
+                        $ExtraProductOrder->id = $extraProductOrder_id;
+                        $ExtraProductOrder->extraID = $extra['id'];
+                        $ExtraProductOrder->productOrderID = $productOrder_id;
+                        $ExtraProductOrder->quantity = $extra['quantity'];
+                        $ExtraProductOrder->save();
                     }
                 } else {
                     $this->responsedata = [
@@ -98,6 +128,7 @@ class OrderController extends Controller
                     return response()->json($this->responsedata,$this->status);
                 }
             }
+            $Order->totalAmount = $price;
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
@@ -155,19 +186,72 @@ class OrderController extends Controller
     public function update(Request $request, $id)
     {
         $this->validate($request, [
-            'name' => 'required|string',
-            'description' => 'string',
-            'apiKey' => 'required|string'
+            'paymentID' => 'integer',
+            'state' => 'string',
+            'products' => 'required|array',
+            /*'products.id' => 'required|integer',
+            'products.extras' => 'required|array',
+            'products.extras.id' => 'integer',
+            'products.extras.quantity' => 'integer',*/
         ]);
 
         $data = $request->all();
+        $price = $this->priceCalculate($data["products"]);  
         
-        $Order = Order::find($id);
-        $Order->name = $data['name'];
-        $Order->description = $data['description'];
-        $Order->apiKey = $data['apiKey'];
+        $Order = Order::where('id',$id)->get()[0];
+        $Order->paymentID = !empty($data['paymentID']) ? $data['paymentID'] : 0;
+        $Order->state = $data['state'];
 
         if ($Order->save()) {
+            $ProductOrder = ProductOrders::where('orderID',$id);
+            $ProductOrders = $ProductOrder->get();
+            foreach ($ProductOrders as $productOrder) {
+                $ExtrasProductOrder = ExtrasProductOrder::where('productOrderID',$productOrder['id'])->forceDelete();
+            }
+            $ProductOrder->forceDelete();
+
+            foreach ($data['products'] as $product) {
+                $productOrder_table = ProductOrders::latest()->first();
+                if ($productOrder_table) {
+                    $productOrder_id = $productOrder_table->id + 1;
+                } else {
+                    $productOrder_id = 1;
+                }
+
+                $ProductOrder = new ProductOrders;
+                $ProductOrder->id = $productOrder_id;
+                $ProductOrder->productID = $product['id'];
+                $ProductOrder->orderID = $order_id;
+
+                if ($ProductOrder->save()) {
+                    $ProductOrder->id = $productOrder_id;
+                    foreach ($product['extras'] as $extra) {
+                        $extraProductOrder_table = ExtrasProductOrder::latest()->first();
+                        if ($extraProductOrder_table) {
+                            $extraProductOrder_id = $extraProductOrder_table->id + 1;
+                        } else {
+                            $extraProductOrder_id = 1;
+                        }
+
+                        $ExtraProductOrder = new ExtrasProductOrder;
+                        $ExtraProductOrder->id = $extraProductOrder_id;
+                        $ExtraProductOrder->extraID = $extra['id'];
+                        $ExtraProductOrder->productOrderID = $productOrder_id;
+                        $ExtraProductOrder->quantity = $extra['quantity'];
+                        $ExtraProductOrder->save();
+                    }
+                } else {
+                    $this->responsedata = [
+                        'error'=> ['Failed'],
+                        'status' => false,
+                        'message' => 'Failure to save Order'
+                    ];
+        
+                    $this->status = 405;
+                    return response()->json($this->responsedata,$this->status);
+                }
+            }
+            $Order->totalAmount = $price;
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
@@ -193,12 +277,25 @@ class OrderController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)
-    {
-        if (Order::where('id',$id)->forceDelete()) {
-            $this->responsedata = [
-                'status' => true,
-                'message' => 'Ok'
-            ];
+    {   
+        $Order = Order::where('id',$id);
+        $Orders = $Order->get();
+        if (!empty($Orders)) {   
+            foreach ($Orders as $order) {
+                $ProductOrder = ProductOrders::where('orderID',$order['id']);
+                $ProductOrders = $ProductOrder->get();
+                foreach ($ProductOrders as $productOrder) {
+                    $ExtrasProductOrder = ExtrasProductOrder::where('productOrderID',$productOrder['id'])->forceDelete();
+                }
+                $ProductOrder->forceDelete();
+            }
+
+            if ($Order->forceDelete()) {
+                $this->responsedata = [
+                    'status' => true,
+                    'message' => 'Ok'
+                ];
+            }
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],

@@ -35,11 +35,13 @@ class PaymentController extends Controller
 
         $data = $request->all();
         $payment_table = Payment::latest()->first();
+        $active = 0;
 
         if ($payment_table) {
             $payment_id = $payment_table->id + 1;
         } else {
             $payment_id = 1;
+            $active = 1;
         }
         
         $Payment = new Payment;
@@ -48,6 +50,7 @@ class PaymentController extends Controller
         $Payment->description = $data['description'];
         $Payment->apiKey = $data['apiKey'];
         $Payment->url = $data['url'];
+        $Payment->active = $active;
 
         if ($Payment->save()) {
             $this->responsedata = [
@@ -134,7 +137,8 @@ class PaymentController extends Controller
             'name' => 'required|string',
             'description' => 'string',
             'apiKey' => 'required|string',
-            'url' => 'required|string'
+            'url' => 'required|string',
+            'active' => 'required|integer'
         ]);
 
         $data = $request->all();
@@ -144,6 +148,13 @@ class PaymentController extends Controller
         $Payment->description = $data['description'];
         $Payment->apiKey = $data['apiKey'];
         $Payment->url = $data['url'];
+        $Active = Payment::where('active',$data['active'])->get()[0];
+        if ($Active) {
+            $Active->active = 0;
+            if ($Active->save()) {
+                $Payment->active = $data['active'];
+            }
+        }
 
         if ($Payment->save()) {
             $this->responsedata = [
