@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Utilities\OrderResponse;
 use App\Order;
 use App\Extra;
 use App\Product;
@@ -29,7 +30,7 @@ class OrderController extends Controller
      * @return \Illuminate\Http\Response
      */
 
-    public function priceCalculate ($order) {
+    /*public function priceCalculate ($order) {
         $total = 0;
 
         if ($order) {
@@ -55,7 +56,7 @@ class OrderController extends Controller
         }
 
         return $total;
-    }
+    }*/
 
     public function store(Request $request)
     {
@@ -69,7 +70,6 @@ class OrderController extends Controller
         ]);
 
         $data = $request->all();
-        $price = $this->priceCalculate($data["products"]);
         $order_table = Order::latest()->first();
         $User = Auth::user();
 
@@ -128,11 +128,12 @@ class OrderController extends Controller
                     return response()->json($this->responsedata,$this->status);
                 }
             }
-            $Order->totalAmount = $price;
+            $orderDetails = new OrderResponse($Order->id);
+            $orderDetails = $orderDetails->getOrderDetails();
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Order
+                'data' => $orderDetails
             ];
         } else {
             $this->responsedata = [
@@ -155,7 +156,8 @@ class OrderController extends Controller
      */
     public function show($id)
     {
-        $Order = Order::where('id',$id)->get();
+        $Order = new OrderResponse($id);
+        $Order = $orderDetails->getOrderDetails();
 
         if ($Order) {
             $this->responsedata = [
@@ -168,6 +170,38 @@ class OrderController extends Controller
                 'error'=> ['Failed'],
                 'status' => false,
                 'message' => 'Order not found'
+            ];
+
+            $this->status = 405;
+        }
+
+        return response()->json($this->responsedata,$this->status);
+    }
+
+    public function myOrders()
+    {
+        $User = Auth::user();
+        $Orders = Order::where('userID',$User->id)->get();
+        //return $Orders;
+        $allOrders = array();
+
+        foreach ($Orders as $order) {
+            $orderDetails = new OrderResponse($order['id']);
+            $orderDetails = $orderDetails->getOrderDetails();
+            array_push($allOrders,$orderDetails);
+        }
+
+        if (count($allOrders) > 0) {
+            $this->responsedata = [
+                'status' => true,
+                'message' => 'Ok',
+                'data' => $allOrders
+            ];
+        } else {
+            $this->responsedata = [
+                'error'=> ['Failed'],
+                'status' => false,
+                'message' => 'Orders not found'
             ];
 
             $this->status = 405;
@@ -195,12 +229,10 @@ class OrderController extends Controller
             'products.extras.quantity' => 'integer',*/
         ]);
 
-        $data = $request->all();
-        $price = $this->priceCalculate($data["products"]);  
-        
+        $data = $request->all();        
         $Order = Order::where('id',$id)->get()[0];
         $Order->paymentID = !empty($data['paymentID']) ? $data['paymentID'] : 0;
-        $Order->state = $data['state'];
+        $Order->state = !empty($data['state']) ? $data['state'] : "";
 
         if ($Order->save()) {
             $ProductOrder = ProductOrders::where('orderID',$id);
@@ -221,7 +253,7 @@ class OrderController extends Controller
                 $ProductOrder = new ProductOrders;
                 $ProductOrder->id = $productOrder_id;
                 $ProductOrder->productID = $product['id'];
-                $ProductOrder->orderID = $order_id;
+                $ProductOrder->orderID = $id;
 
                 if ($ProductOrder->save()) {
                     $ProductOrder->id = $productOrder_id;
@@ -251,11 +283,12 @@ class OrderController extends Controller
                     return response()->json($this->responsedata,$this->status);
                 }
             }
-            $Order->totalAmount = $price;
+            $orderDetails = new OrderResponse($Order->id);
+            $orderDetails = $orderDetails->getOrderDetails();
             $this->responsedata = [
                 'status' => true,
                 'message' => 'Ok',
-                'data' => $Order
+                'data' => $orderDetails
             ];
         } else {
             $this->responsedata = [

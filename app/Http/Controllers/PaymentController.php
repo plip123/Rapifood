@@ -143,14 +143,14 @@ class PaymentController extends Controller
 
         $data = $request->all();
         
-        $Payment = Payment::find($id);
+        $Payment = Payment::where('id',$id)->get()[0];
         $Payment->name = $data['name'];
         $Payment->description = $data['description'];
         $Payment->apiKey = $data['apiKey'];
         $Payment->url = $data['url'];
-        $Active = Payment::where('active',$data['active'])->get()[0];
-        if ($Active) {
-            $Active->active = 0;
+        $Active = Payment::where('active',1)->get();
+        if (count($Active) > 0 && $data['active'] == 1) {
+            $Active[0]->active = 0;
             if ($Active->save()) {
                 $Payment->active = $data['active'];
             }

@@ -330,6 +330,56 @@
     method:DELETE  
 </p>
 
+## Orders CRUD
+<p>
+    Insert
+    http://127.0.0.1:8000/api/order
+    method:POST
+    
+    {
+        "paymentID": 0,
+        "products": [
+            {
+                "id": required|integer,
+                "extras": [
+                    {
+                        "id": required|integer,
+                        "quantity": required|integer
+                    }
+                ]
+            }
+        ]
+    }
+
+    Show
+    http://127.0.0.1:8000/api/order/{id}
+    method:GET
+
+    All
+    http://127.0.0.1:8000/api/myOrders/
+    method:GET
+    
+    Update
+    http://127.0.0.1:8000/api/order/{id}
+    method:PUT
+    {
+        "paymentID": 0,
+        "products": [
+            {
+                "id": required|integer,
+                "extras": {
+                    "id": required|integer,
+                    "quantity": required|integer
+                }
+            }
+        ]
+    }
+    
+    Delete
+    http://127.0.0.1:8000/api/payment/{id}
+    method:DELETE  
+</p>
+
 
 ## Payment CRUD
 <p>
@@ -359,7 +409,8 @@
         'name': 'required|string',
         'description': 'string',
         'apiKey': 'required|string',
-        'url': 'required|string'
+        'url': 'required|string',
+        'active' : required|integer
     }
     
     Delete
@@ -372,19 +423,13 @@
     http://127.0.0.1:8000/api/pay
     
     {
-        'paymentID': 'required|integer',
+        'orderID': required|integer,
         'cardNumber': 'required|string',
         'cardDate': 'required|string',
         'securityCode': 'required|string',
         'cardName': 'required|string',
-        'amount': 'required|integer',
         'description': 'required|string'
     }
-</p>
-
-## Payment Order
-<p>
- 
 </p>
 
 

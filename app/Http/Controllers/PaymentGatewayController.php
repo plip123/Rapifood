@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Utilities\OrderResponse;
 use App\Payment;
 use App\Order;
 use App\Extra;
@@ -71,7 +72,7 @@ class PaymentGatewayController extends Controller
             'description' => 'required|string',
         ]);
         
-        $amount = $this->calculateAmount($data['orderID']);
+        $amount = $this->calculateAmount($request['orderID']);
         $Payment = Payment::where("active",1);
         $this->apiKey = $Payment->get("apiKey")[0]["apiKey"];
         $this->url = $Payment->get("url")[0]["url"];
@@ -95,14 +96,32 @@ class PaymentGatewayController extends Controller
         curl_setopt( $curl,CURLOPT_POST,true);
         curl_setopt( $curl,CURLOPT_HTTPHEADER, array('Content-type: application/json',"Accept: application/json",'apikey: '.$this->apiKey));
         curl_setopt( $curl, CURLOPT_RETURNTRANSFER, true);
-        $request = curl_exec( $curl );
+        $req = curl_exec( $curl );
 
-        if ($request) {
-            $this->responsedata = [
-                'status' => true,
-                'message' => '',
-                'data' => $request
-            ];
+        if ($req) {
+            $Order = Order::where('id',$request['orderID'])->get()[0];
+            $Order->state = "Completed";
+
+            if ($Order->save()) {
+                $req = json_decode($req);
+                $orderDetails = new OrderResponse($Order->id);
+                $orderDetails = $orderDetails->getOrderDetails();
+
+                $this->responsedata = [
+                    'status' => true,
+                    'message' => 'Ok',
+                    'data' => array(
+                        'details' => $req,
+                        'order' => $orderDetails
+                    )
+                ];
+            } else {
+                $this->responsedata = [
+                    'error'=> ['Failed'],
+                    'status' => false,
+                    'message' => 'Failure to update order'
+                ];
+            }
         } else {
             $this->responsedata = [
                 'error'=> ['Failed'],
