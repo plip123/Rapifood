@@ -78,6 +78,8 @@ class OrderResponse
                 }
             }
         }
+        $aux['orderID'] = $this->id;
+        $aux['orderState'] = $Order->state;
         $aux['details'] = $products;
         $aux['amount'] = $this->calculateAmount();
         return $aux;
