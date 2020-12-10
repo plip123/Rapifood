@@ -149,9 +149,9 @@ class PaymentController extends Controller
         $Payment->apiKey = $data['apiKey'];
         $Payment->url = $data['url'];
         $Active = Payment::where('active',1)->get();
-        if (count($Active) > 0 && $data['active'] == 1) {
+        if (count($Active) > 0) {
             $Active[0]->active = 0;
-            if ($Active->save()) {
+            if ($Active[0]->save()) {
                 $Payment->active = $data['active'];
             }
         }
