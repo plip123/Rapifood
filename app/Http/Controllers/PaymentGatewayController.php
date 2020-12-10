@@ -97,13 +97,13 @@ class PaymentGatewayController extends Controller
         curl_setopt( $curl,CURLOPT_HTTPHEADER, array('Content-type: application/json',"Accept: application/json",'apikey: '.$this->apiKey));
         curl_setopt( $curl, CURLOPT_RETURNTRANSFER, true);
         $req = curl_exec( $curl );
+        $req = json_decode($req);
 
-        if ($req) {
+        if (!empty($req->amount)) {
             $Order = Order::where('id',$request['orderID'])->get()[0];
             $Order->state = "Completed";
 
             if ($Order->save()) {
-                $req = json_decode($req);
                 $orderDetails = new OrderResponse($Order->id);
                 $orderDetails = $orderDetails->getOrderDetails();
 
