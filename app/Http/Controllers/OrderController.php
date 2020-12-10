@@ -63,6 +63,9 @@ class OrderController extends Controller
         $this->validate($request, [
             'paymentID' => 'integer',
             'products' => 'required|array',
+            'addressShipping' => 'string',
+            'nameShipping' => 'string',
+            'phoneShipping' => 'string'
             /*'products.id' => 'required|integer',
             'products.extras' => 'required|array',
             'products.extras.id' => 'integer',
@@ -83,6 +86,9 @@ class OrderController extends Controller
         $Order->id = $order_id;
         $Order->userID = $User->id;
         $Order->paymentID = !empty($data['paymentID']) ? $data['paymentID'] : 0;
+        $Order->address_shipping = !empty($data['addressShipping']) ? $data['addressShipping'] : "";
+        $Order->name_shipping = !empty($data['nameShipping']) ? $data['nameShipping'] : "";
+        $Order->phone_shipping = !empty($data['phoneShipping']) ? $data['phoneShipping'] : "";
         $Order->state = 'In process';
 
         if ($Order->save()) {
@@ -223,6 +229,9 @@ class OrderController extends Controller
             'paymentID' => 'integer',
             'state' => 'string',
             'products' => 'required|array',
+            'addressShipping' => 'string',
+            'nameShipping' => 'string',
+            'phoneShipping' => 'string'
             /*'products.id' => 'required|integer',
             'products.extras' => 'required|array',
             'products.extras.id' => 'integer',
@@ -232,6 +241,9 @@ class OrderController extends Controller
         $data = $request->all();        
         $Order = Order::where('id',$id)->get()[0];
         $Order->paymentID = !empty($data['paymentID']) ? $data['paymentID'] : 0;
+        $Order->address_shipping = !empty($data['addressShipping']) ? $data['addressShipping'] : "";
+        $Order->name_shipping = !empty($data['nameShipping']) ? $data['nameShipping'] : "";
+        $Order->phone_shipping = !empty($data['phoneShipping']) ? $data['phoneShipping'] : "";
         $Order->state = !empty($data['state']) ? $data['state'] : "";
 
         if ($Order->save()) {

@@ -348,7 +348,10 @@
                     }
                 ]
             }
-        ]
+        ],
+        "addressShipping": "string",
+        "nameShipping": "string",
+        "phoneShipping": "string"
     }
 
     Show
@@ -372,7 +375,10 @@
                     "quantity": required|integer
                 }
             }
-        ]
+        ],
+        "addressShipping": "string",
+        "nameShipping": "string",
+        "phoneShipping": "string"
     }
     
     Delete

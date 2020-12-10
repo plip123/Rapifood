@@ -80,8 +80,13 @@ class OrderResponse
         }
         $aux['orderID'] = $this->id;
         $aux['orderState'] = $Order->state;
-        $aux['details'] = $products;
+        $aux['shipping'] = array(
+            'address' => $Order->address_shipping,
+            'name' => $Order->name_shipping,
+            'phone' => $Order->phone_shipping
+        );
         $aux['amount'] = $this->calculateAmount();
+        $aux['details'] = $products;
         return $aux;
     }
 }
